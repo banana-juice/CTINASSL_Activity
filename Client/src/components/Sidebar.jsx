@@ -31,21 +31,14 @@ const ICONS = {
       <circle cx="8" cy="17" r="2" />
     </>
   ),
-  logout: (
-    <>
-      <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
-      <path d="M16 8l4 4-4 4M20 12H9" />
-    </>
-  ),
 }
 
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/dashboard', icon: 'dashboard' },
   { label: 'Patient Intake', to: '/patient-intake', icon: 'intake' },
-  { label: 'Queue', icon: 'queue' },
-  { label: 'Records', icon: 'records' },
+  { label: 'Queue', to: '/queue', icon: 'queue' },
+  { label: 'Records', to: '/records', icon: 'records' },
   { label: 'Settings', icon: 'settings' },
-  { label: 'Logout', icon: 'logout' },
 ]
 
 function Icon({ name }) {
@@ -145,7 +138,9 @@ export default function Sidebar() {
               aria-label="Open menu"
               title="Open menu"
               onClick={() => setOpen(true)}
-            />
+            >
+              TH
+            </button>
             <ul className="rail-list">
               {NAV_ITEMS.map((item) => (
                 <li key={item.label}>

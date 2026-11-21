@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import IntakeForm from '../components/IntakeForm.jsx'
 import TriageLevel from '../components/TriageLevel.jsx'
 import { STATUSES } from '../data/patients.js'
 import useNow from '../hooks/useNow.js'
@@ -21,9 +22,10 @@ function StatusLine({ patient, now }) {
 }
 
 export default function PatientIntake() {
-  const { patients } = useOutletContext()
+  const { patients, addPatient } = useOutletContext()
   const now = useNow()
   const [filter, setFilter] = useState('All')
+  const [formOpen, setFormOpen] = useState(false)
 
   const sorted = [...patients].sort(byAcuity)
   const rows = filter === 'All' ? sorted : sorted.filter((p) => p.status === filter)
@@ -37,12 +39,7 @@ export default function PatientIntake() {
             <h1 className="intake__title">Patient intake</h1>
             <p className="intake__sub">Sorted by triage level, then arrival time.</p>
           </div>
-          <button
-            type="button"
-            className="btn btn--primary"
-            aria-disabled="true"
-            title="The intake form is not built yet"
-          >
+          <button type="button" className="btn btn--primary" onClick={() => setFormOpen(true)}>
             New intake
           </button>
         </div>
@@ -113,6 +110,7 @@ export default function PatientIntake() {
           </table>
         </div>
       </div>
+      <IntakeForm open={formOpen} onClose={() => setFormOpen(false)} onSubmit={addPatient} />
     </div>
   )
 }
