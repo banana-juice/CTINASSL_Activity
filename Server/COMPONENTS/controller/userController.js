@@ -46,26 +46,26 @@ router.post('/create', async (request, response) => {
     }
 });
 
-// Update a user
 router.put('/update/:id', async (request, response) => {
-    try {
-        const { email, name, password } = request.body;
-        const updatedUser = await User.findByIdAndUpdate(
-            request.params.id,
-            { email, name, password },
-            { new: true, runValidators: true }
-        );
-        if (!updatedUser) {
+    try{
+        const user = await User.findById(request.params.id);
+        if (!user) {
             return response.status(404).json({
                 message: "User not found",
                 success: false
             });
         }
+        const {email, name, password} = request.body;
+        user.email = email;
+        user.name = name;
+        user.password = password;
+        await user.save();
         response.status(200).json({
             message: "User updated successfully",
             success: true,
-            user: updatedUser
+            user: user
         });
+
     } catch (error) {
         response.status(500).json({
             message: "Unable to update user",
@@ -74,16 +74,9 @@ router.put('/update/:id', async (request, response) => {
     }
 });
 
-// Delete a user
-router.delete('/delete/:id', async (request, response) => {
+router.delete('/:id', async (request, response) => {
     try {
-        const deletedUser = await User.findByIdAndDelete(request.params.id);
-        if (!deletedUser) {
-            return response.status(404).json({
-                message: "User not found",
-                success: false
-            });
-        }
+        await User.findByIdAndDelete(request.params.id);
         response.status(200).json({
             message: "User deleted successfully",
             success: true
