@@ -11,11 +11,26 @@ export default function AppLayout() {
   const callPatient = (id) =>
     setPatients((list) => list.map((p) => (p.id === id ? { ...p, status: 'In assessment' } : p)))
 
+  const addPatient = (data) =>
+    setPatients((list) => {
+      const next = list.reduce((max, p) => Math.max(max, Number(p.queueNo.slice(2))), 0) + 1
+      return [
+        ...list,
+        {
+          ...data,
+          id: crypto.randomUUID(),
+          queueNo: `Q-${String(next).padStart(3, '0')}`,
+          arrivedAt: new Date().toISOString(),
+          status: 'Waiting',
+        },
+      ]
+    })
+
   return (
     <div className="app">
       <Sidebar />
       <main className="app__main">
-        <Outlet context={{ patients, callPatient }} />
+        <Outlet context={{ patients, callPatient, addPatient }} />
       </main>
     </div>
   )

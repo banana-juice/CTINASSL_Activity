@@ -1,54 +1,59 @@
-/* All design tokens live here. No pure white, no pure black. */
+/* Design tokens. Original sage and green palette, clinical contrast. */
 :root {
   /* Surfaces */
-  --sage: #93ae95; /* page / header background */
-  --sage-deep: #7f9d83; /* next-patient bar, segmented track */
+  --sage: #93ae95;
+  --sage-deep: #7f9d83;
   --sidebar: #e3e8df;
-  --surface: #fbfcf9;
   --page: #f4f6f1;
+  --surface: #fbfcf9;
+  --surface-alt: #f0f3ec;
+
+  /* Accent */
   --primary: #0f6a39;
   --primary-hover: #0b5a30;
+  --primary-soft: #dfe8dc;
 
   /* Text and lines */
   --ink: #17241c;
   --ink-on-sage: #1f3a2b;
   --muted: #56635a;
   --line: #dde3d8;
+  --line-strong: #aab5a8;
   --wait-long: #9a3412;
 
-  /* Triage level: acuity only, never decoration */
+  /* Triage level: used for acuity only, never decoration */
   --level-1: #b42318;
   --level-2: #c2410c;
   --level-3: #a16207;
   --level-4: #15803d;
   --level-5: #1d4ed8;
 
-  /* Spacing scale */
+  /* Spacing */
   --space-1: 4px;
   --space-2: 8px;
+  --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
   --space-12: 48px;
 
-  /* Radius: 6 level squares, 10 buttons / nav rows / segmented, 12 table panel */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
+  /* Radius */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
 
-  /* Type */
-  --font-body: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
-  --font-display: 'Archivo', 'Segoe UI', system-ui, sans-serif;
+  /* Type: Belleza for headings, Public Sans for everything else.
+     Both fonts are bundled with the app (see main.jsx), nothing loads from the web. */
+  --font-heading: 'Belleza', 'Optima', 'Candara', 'Segoe UI', sans-serif;
+  --font-body: 'Public Sans Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
   --text-sm: 14px;
   --text-base: 16px;
-  --text-lg: 20px;
-  --text-xl: 24px;
-  --text-2xl: 32px;
-  --text-3xl: 40px;
-  --text-4xl: 56px;
+  --text-lg: 17px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
 
   /* Layout */
-  --sidebar-closed: 148px;
-  --sidebar-open: 472px;
-  --page-inset: clamp(32px, 6.3%, 81px);
+  --sidebar-width: 232px;
+  --page-inset: clamp(20px, 3.5vw, 48px);
 }

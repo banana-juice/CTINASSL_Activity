@@ -20,7 +20,7 @@ export function byAcuity(a, b) {
 
 export function currentShift(date) {
   const hour = date.getHours()
-  if (hour >= 7 && hour < 15) return 'Day shift 07:00–15:00'
-  if (hour >= 15 && hour < 23) return 'Evening shift 15:00–23:00'
-  return 'Night shift 23:00–07:00'
+  if (hour >= 7 && hour < 15) return 'Day shift, 07:00 to 15:00'
+  if (hour >= 15 && hour < 23) return 'Evening shift, 15:00 to 23:00'
+  return 'Night shift, 23:00 to 07:00'
 }

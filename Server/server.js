@@ -4,6 +4,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const connectDB = require('./COMPONENTS/config/dbconnect');
+connectDB();
+
+const userRoutes = require('./COMPONENTS/controller/userController');
+app.use('/users', userRoutes);
+
 app.get('/', (request, response) => {
   response.status(200).send('Hello World!');
 });

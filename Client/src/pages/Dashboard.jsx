@@ -1,94 +1,117 @@
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import NextToCall from '../components/NextToCall.jsx'
-import PriorityGroup from '../components/PriorityGroup.jsx'
 import TriageLevel from '../components/TriageLevel.jsx'
-import { FACILITY_NAME, TRIAGE_NURSE } from '../data/patients.js'
 import useNow from '../hooks/useNow.js'
-import { byAcuity, currentShift, formatTime } from '../utils/patients.js'
+import { LONG_WAIT_MINUTES, byAcuity, formatTime, formatWait, minutesSince } from '../utils/patients.js'
 
-const GROUPS = [
-  { key: 'critical', name: 'Critical', levels: 'Levels 1–2', match: [1, 2] },
-  { key: 'urgent', name: 'Urgent', levels: 'Level 3', match: [3] },
-  { key: 'routine', name: 'Routine', levels: 'Levels 4–5', match: [4, 5] },
-]
+const TABS = ['Waiting', 'In assessment', 'Referred']
 
-const LATEST_COUNT = 6
+const EMPTY = {
+  Waiting: 'No one is waiting right now.',
+  'In assessment': 'No one is being assessed right now.',
+  Referred: 'No patients have been referred.',
+}
+
+const byArrival = (a, b) => new Date(a.arrivedAt) - new Date(b.arrivedAt)
 
 export default function Dashboard() {
   const { patients, callPatient } = useOutletContext()
   const now = useNow()
+  const [tab, setTab] = useState('Waiting')
 
-  const waiting = patients.filter((p) => p.status === 'Waiting').sort(byAcuity)
-  const inAssessment = patients.filter((p) => p.status === 'In assessment').length
-  const referred = patients.filter((p) => p.status === 'Referred').length
-  const latest = [...patients]
-    .sort((a, b) => new Date(b.arrivedAt) - new Date(a.arrivedAt))
-    .slice(0, LATEST_COUNT)
-
-  const date = now.toLocaleDateString('en-PH', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-  const meta = [date, currentShift(now), TRIAGE_NURSE && `Triage nurse: ${TRIAGE_NURSE}`]
-    .filter(Boolean)
-    .join(' · ')
+  const inTab = (name) => patients.filter((p) => p.status === name)
+  const rows = [...inTab(tab)].sort(tab === 'Waiting' ? byAcuity : byArrival)
+  const isWaiting = tab === 'Waiting'
+  const columns = isWaiting ? 7 : 5
 
   return (
-    <div className="dashboard">
-      <header className="dash-head">
-        <div className="dash-head__top">
-          <h1 className="dash-head__title">{FACILITY_NAME}</h1>
-          <p className="dash-head__time num" aria-label="Current time">
-            {formatTime(now)}
-          </p>
-        </div>
-        <p className="dash-head__meta">{meta}</p>
-        <p className="dash-head__summary">
-          <strong className="dash-head__big num">{waiting.length}</strong> waiting to be seen,{' '}
-          <strong>{inAssessment}</strong> in assessment, <strong>{referred}</strong> referred out tonight.
-        </p>
+    <div className="page">
+      <header className="page-head">
+        <h1 className="page-head__title">Dashboard</h1>
       </header>
 
-      <NextToCall patient={waiting[0]} now={now} onCall={callPatient} />
+      <div className="filter" role="group" aria-label="Show patients who are">
+        {TABS.map((name) => (
+          <button
+            key={name}
+            type="button"
+            className="filter__button"
+            aria-pressed={tab === name}
+            onClick={() => setTab(name)}
+          >
+            {name} <span className="num">({inTab(name).length})</span>
+          </button>
+        ))}
+      </div>
 
-      <section className="priority" aria-labelledby="priority-heading">
-        <h2 id="priority-heading" className="section-title">
-          Waiting by priority
-        </h2>
-        <div className="priority__groups">
-          {GROUPS.map((group) => (
-            <PriorityGroup
-              key={group.key}
-              group={group}
-              patients={waiting.filter((p) => group.match.includes(p.level))}
-              now={now}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="arrivals" aria-labelledby="arrivals-heading">
-        <h2 id="arrivals-heading" className="section-title">
-          Latest arrivals
-        </h2>
-        {latest.length === 0 ? (
-          <p className="arrivals__empty">No arrivals yet.</p>
-        ) : (
-          <ul className="arrivals__list">
-            {latest.map((patient) => (
-              <li key={patient.id}>
-                <span className="num arrivals__time">{formatTime(patient.arrivedAt)}</span>
-                <span className="num">{patient.queueNo}</span>
-                <span className="arrivals__name">{patient.name}</span>
-                <span>{patient.complaint}</span>
-                <TriageLevel level={patient.level} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="panel table-wrap">
+        <table className="table">
+          <caption className="sr-only">
+            {isWaiting ? 'Patients waiting to be seen, most urgent first' : `Patients: ${tab.toLowerCase()}`}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Queue</th>
+              <th scope="col">Patient</th>
+              <th scope="col">Chief complaint</th>
+              <th scope="col">Triage level</th>
+              <th scope="col">Arrived</th>
+              {isWaiting && <th scope="col">Waiting</th>}
+              {isWaiting && (
+                <th scope="col" className="table__right">
+                  <span className="sr-only">Action</span>
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={columns} className="table__empty">
+                  {EMPTY[tab]}
+                </td>
+              </tr>
+            ) : (
+              rows.map((patient, index) => {
+                const minutes = minutesSince(patient.arrivedAt, now)
+                return (
+                  <tr key={patient.id}>
+                    <td className="num">{patient.queueNo}</td>
+                    <th scope="row">
+                      <span className="patient__name">{patient.name}</span>
+                      <span className="patient__meta">
+                        {patient.age} · {patient.sex}
+                      </span>
+                    </th>
+                    <td>{patient.complaint}</td>
+                    <td>
+                      <TriageLevel level={patient.level} />
+                    </td>
+                    <td className="num">{formatTime(patient.arrivedAt)}</td>
+                    {isWaiting && (
+                      <td className={`num${minutes >= LONG_WAIT_MINUTES ? ' wait--long' : ''}`}>
+                        {formatWait(minutes)}
+                      </td>
+                    )}
+                    {isWaiting && (
+                      <td className="table__right">
+                        <button
+                          type="button"
+                          className={`btn btn--small ${index === 0 ? 'btn--primary' : 'btn--secondary'}`}
+                          onClick={() => callPatient(patient.id)}
+                        >
+                          Call
+                          <span className="sr-only"> {patient.name}</span>
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
