@@ -19,6 +19,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/patient-intake" element={<PatientIntake />} />
           <Route path="/patient-intake/new" element={<NewIntake />} />
+          <Route path="/patient-intake/:id/edit" element={<NewIntake />} />
           <Route path="/records" element={<Records />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

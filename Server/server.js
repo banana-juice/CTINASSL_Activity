@@ -10,6 +10,9 @@ connectDB();
 const userRoutes = require('./COMPONENTS/controller/userController');
 app.use('/users', userRoutes);
 
+const patientRoutes = require('./COMPONENTS/controller/patientController');
+app.use('/patients', patientRoutes);
+
 app.get('/', (request, response) => {
   response.status(200).send('Hello World!');
 });

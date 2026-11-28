@@ -1,4 +1,4 @@
-// Single source for page data. No backend yet and no sample records on purpose.
+// Shared labels and constants. Patient records now come from the server (see src/api/patients.js).
 //
 // Each patient is expected to look like:
 //   { id, queueNo: 'Q-001', name, age, sex: 'F' | 'M', complaint,
@@ -19,4 +19,3 @@ export const TRIAGE_LABELS = {
 
 export const STATUSES = ['Waiting', 'In assessment', 'Referred']
 
-export const patients = []

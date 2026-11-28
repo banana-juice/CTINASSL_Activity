@@ -1,11 +1,24 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import TriageLevel from '../components/TriageLevel.jsx'
 import { formatTime } from '../utils/patients.js'
 
 export default function Records() {
-  const { patients } = useOutletContext()
+  const { patients, removePatient, setError } = useOutletContext()
   const [query, setQuery] = useState('')
+  const [deletingId, setDeletingId] = useState(null)
+
+  const handleDelete = async (patient) => {
+    if (!window.confirm(`Delete ${patient.queueNo} (${patient.name})? This cannot be undone.`)) return
+    setDeletingId(patient.id)
+    try {
+      await removePatient(patient.id)
+    } catch (err) {
+      setError(`Could not delete patient: ${err.message}`)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const term = query.trim().toLowerCase()
   const rows = [...patients]
@@ -44,15 +57,16 @@ export default function Records() {
               <th scope="col">Chief complaint</th>
               <th scope="col">Triage level</th>
               <th scope="col">Status</th>
+              <th scope="col">Arrived</th>
               <th scope="col" className="table__right">
-                Arrived
+                <span className="sr-only">Actions</span>
               </th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="table__empty">
+                <td colSpan={7} className="table__empty">
                   {term ? 'No records match your search.' : 'No records yet.'}
                 </td>
               </tr>
@@ -73,7 +87,23 @@ export default function Records() {
                   <td className={patient.status === 'In assessment' ? 'status--active' : undefined}>
                     {patient.status}
                   </td>
-                  <td className="table__right num">{formatTime(patient.arrivedAt)}</td>
+                  <td className="num">{formatTime(patient.arrivedAt)}</td>
+                  <td className="table__right">
+                    <div className="table__actions">
+                      <Link to={`/patient-intake/${patient.id}/edit`} className="btn btn--secondary btn--small">
+                        Edit<span className="sr-only"> {patient.name}</span>
+                      </Link>
+                      <button
+                        type="button"
+                        className="btn btn--danger btn--small"
+                        disabled={deletingId === patient.id}
+                        onClick={() => handleDelete(patient)}
+                      >
+                        {deletingId === patient.id ? 'Deleting…' : 'Delete'}
+                        <span className="sr-only"> {patient.name}</span>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}

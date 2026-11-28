@@ -1,36 +1,63 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/Sidebar.jsx'
-import { patients as initialPatients } from '../data/patients.js'
+import { createPatient, deletePatient, getPatients, updatePatient } from '../api/patients.js'
 
 export default function AppLayout() {
-  // Held here so "Call patient" on the dashboard shows up on the intake list too.
-  // Not persisted: a reload goes back to the data file.
-  const [patients, setPatients] = useState(initialPatients)
+  // Held here so every page shares the same list. Saved in MongoDB through the server.
+  const [patients, setPatients] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    getPatients()
+      .then(setPatients)
+      .catch((err) => setError(`Could not load patients: ${err.message}`))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const replace = (saved) => setPatients((list) => list.map((p) => (p.id === saved.id ? saved : p)))
+
+  // Create
+  const addPatient = async (data) => {
+    const saved = await createPatient(data)
+    setPatients((list) => [...list, saved])
+    return saved
+  }
+
+  // Update
+  const editPatient = async (id, changes) => {
+    const saved = await updatePatient(id, changes)
+    replace(saved)
+    return saved
+  }
 
   const callPatient = (id) =>
-    setPatients((list) => list.map((p) => (p.id === id ? { ...p, status: 'In assessment' } : p)))
+    editPatient(id, { status: 'In assessment' }).catch((err) => setError(`Could not call patient: ${err.message}`))
 
-  const addPatient = (data) =>
-    setPatients((list) => {
-      const next = list.reduce((max, p) => Math.max(max, Number(p.queueNo.slice(2))), 0) + 1
-      return [
-        ...list,
-        {
-          ...data,
-          id: crypto.randomUUID(),
-          queueNo: `Q-${String(next).padStart(3, '0')}`,
-          arrivedAt: new Date().toISOString(),
-          status: 'Waiting',
-        },
-      ]
-    })
+  // Delete
+  const removePatient = async (id) => {
+    await deletePatient(id)
+    setPatients((list) => list.filter((p) => p.id !== id))
+  }
 
   return (
     <div className="app">
       <Sidebar />
       <main className="app__main">
-        <Outlet context={{ patients, callPatient, addPatient }} />
+        {error && (
+          <p className="alert" role="alert">
+            {error}{' '}
+            <button type="button" className="text-link" onClick={() => setError('')}>
+              Dismiss
+            </button>
+          </p>
+        )}
+        {loading ? (
+          <p className="page">Loading patients…</p>
+        ) : (
+          <Outlet context={{ patients, callPatient, addPatient, editPatient, removePatient, setError }} />
+        )}
       </main>
     </div>
   )

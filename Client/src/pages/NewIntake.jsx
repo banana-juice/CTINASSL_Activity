@@ -1,35 +1,90 @@
 import { useState } from 'react'
-import { Link, useNavigate, useOutletContext } from 'react-router-dom'
+import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import TriageLevel from '../components/TriageLevel.jsx'
+import { STATUSES } from '../data/patients.js'
 
 const LEVELS = [1, 2, 3, 4, 5]
+const EMPTY = { name: '', age: '', sex: '', complaint: '', level: '', status: 'Waiting' }
 
+// Used for both "New Intake" (/patient-intake/new) and "Edit" (/patient-intake/:id/edit)
 export default function NewIntake() {
-  const { addPatient } = useOutletContext()
+  const { patients, addPatient, editPatient } = useOutletContext()
+  const { id } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', age: '', sex: '', complaint: '', level: '' })
+
+  const existing = id ? patients.find((p) => p.id === id) : null
+  const isEdit = Boolean(id)
+
+  const [form, setForm] = useState(() =>
+    existing
+      ? {
+          name: existing.name,
+          age: String(existing.age),
+          sex: existing.sex,
+          complaint: existing.complaint,
+          level: String(existing.level),
+          status: existing.status,
+        }
+      : EMPTY,
+  )
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   const set = (field) => (event) => setForm((f) => ({ ...f, [field]: event.target.value }))
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    addPatient({
+    const data = {
       name: form.name.trim(),
       age: Number(form.age),
       sex: form.sex,
       complaint: form.complaint.trim(),
       level: Number(form.level),
-    })
-    navigate('/patient-intake')
+    }
+    setSaving(true)
+    setError('')
+    try {
+      if (isEdit) {
+        await editPatient(id, { ...data, status: form.status })
+        navigate('/records')
+      } else {
+        await addPatient(data)
+        navigate('/patient-intake')
+      }
+    } catch (err) {
+      setError(err.message)
+      setSaving(false)
+    }
   }
+
+  if (isEdit && !existing) {
+    return (
+      <div className="page">
+        <header className="page-head">
+          <h1 className="page-head__title">Patient not found</h1>
+        </header>
+        <Link to="/records" className="text-link">
+          Back to records
+        </Link>
+      </div>
+    )
+  }
+
+  const backTo = isEdit ? '/records' : '/patient-intake'
 
   return (
     <div className="page">
       <header className="page-head">
-        <h1 className="page-head__title">New Intake</h1>
+        <h1 className="page-head__title">{isEdit ? `Edit ${existing.queueNo}` : 'New Intake'}</h1>
       </header>
 
       <form className="form" onSubmit={handleSubmit}>
+        {error && (
+          <p className="alert" role="alert">
+            {error}
+          </p>
+        )}
+
         <div className="field">
           <label htmlFor="intake-name">Full name</label>
           <input id="intake-name" type="text" required autoComplete="off" value={form.name} onChange={set('name')} />
@@ -90,12 +145,25 @@ export default function NewIntake() {
           ))}
         </fieldset>
 
+        {isEdit && (
+          <div className="field">
+            <label htmlFor="intake-status">Status</label>
+            <select id="intake-status" value={form.status} onChange={set('status')}>
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="form__actions">
-          <Link to="/patient-intake" className="btn btn--secondary">
+          <Link to={backTo} className="btn btn--secondary">
             Cancel
           </Link>
-          <button type="submit" className="btn btn--primary">
-            Add to queue
+          <button type="submit" className="btn btn--primary" disabled={saving}>
+            {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add to queue'}
           </button>
         </div>
       </form>
