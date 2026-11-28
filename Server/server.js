@@ -5,7 +5,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const connectDB = require('./COMPONENTS/config/dbconnect');
-connectDB();
 
 const userRoutes = require('./COMPONENTS/controller/userController');
 app.use('/users', userRoutes);
@@ -45,11 +44,14 @@ app.post('/login', (request, response) => {
         response.status(401).json({ message: 'Invalid username or password' });
     }
 });
-const server = app.listen(8000, () => {
-  console.log('Server is running on port 8000');
-});
+// Start the server only after MongoDB is connected, so every save really reaches the database
+connectDB().then(() => {
+  const server = app.listen(8000, () => {
+    console.log('Server is running on http://localhost:8000');
+  });
 
-server.on('error', (error) => {
-  console.error('Error starting server: ', error);
-  process.exit(1);
+  server.on('error', (error) => {
+    console.error('Error starting server: ', error);
+    process.exit(1);
+  });
 });

@@ -46,7 +46,7 @@ router.get('/:id', async (request, response) => {
 // Create a new patient
 router.post('/create', async (request, response) => {
     try {
-        const { name, age, sex, complaint, level } = request.body;
+        const { name, age, sex, complaint, level } = request.body || {};
 
         const newPatient = new Patient({
             queueNo: await nextQueueNo(),
@@ -85,7 +85,7 @@ router.put('/update/:id', async (request, response) => {
 
         const fields = ['name', 'age', 'sex', 'complaint', 'level', 'status'];
         fields.forEach((field) => {
-            if (request.body[field] !== undefined) {
+            if (request.body?.[field] !== undefined) {
                 patient[field] = request.body[field];
             }
         });

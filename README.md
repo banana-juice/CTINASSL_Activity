@@ -18,3 +18,10 @@
 | POST | `/patients/create` | Create a patient (`name, age, sex, complaint, level`). Queue no. is generated. |
 | PUT | `/patients/update/:id` | Update any of `name, age, sex, complaint, level, status` |
 | DELETE | `/patients/:id` | Delete a patient |
+
+## Testing in Postman
+
+1. Start MongoDB, then `cd Server && npm run dev`. Wait for `MongoDB connected` and `Server is running on http://localhost:8000`.
+2. In Postman: **Import** → `Server/postman/TriageHIS.postman_collection.json`.
+3. Run the **Patients** folder top to bottom (or use **Run collection**). "Create patient" saves the new id into `{{patientId}}`, which the later requests use.
+4. Check the data in MongoDB Compass: database `INF245MWA`, collection `patients`.
